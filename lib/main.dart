@@ -61,7 +61,10 @@ class _HomeToolboxState extends State<HomeToolbox> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Edad"),
           BottomNavigationBarItem(icon: Icon(Icons.school), label: "Univ."),
           BottomNavigationBarItem(icon: Icon(Icons.cloud), label: "Clima"),
-          BottomNavigationBarItem(icon: Icon(Icons.catching_pokemon), label: "Pokémon"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.catching_pokemon),
+            label: "Pokémon",
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.article), label: "Noticias"),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: "Acerca de"),
         ],
@@ -74,12 +77,7 @@ class ToolBoxImage extends StatelessWidget {
   const ToolBoxImage({super.key});
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Image.asset(
-        "assets/tool-box.png",
-        height: 200,
-      ),
-    );
+    return Center(child: Image.asset("assets/tool-box.png", height: 200));
   }
 }
 
@@ -101,7 +99,9 @@ class _GenderPredictorState extends State<GenderPredictor> {
     final data = jsonDecode(res.body);
     setState(() {
       gender = data['gender'];
-      color = (gender == 'male') ? const Color.fromARGB(255, 45, 156, 247) : const Color.fromARGB(255, 214, 72, 172);
+      color = (gender == 'male')
+          ? const Color.fromARGB(255, 45, 156, 247)
+          : const Color.fromARGB(255, 214, 72, 172);
     });
   }
 
@@ -110,14 +110,24 @@ class _GenderPredictorState extends State<GenderPredictor> {
     return Container(
       color: color,
       child: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Nombre')),
-          ),
-          ElevatedButton(onPressed: predictGender, child: const Text("Predecir Género")),
-          if (gender.isNotEmpty) Text("Género: $gender", style: const TextStyle(fontSize: 20)),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: controller,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: predictGender,
+              child: const Text("Predecir Género"),
+            ),
+            if (gender.isNotEmpty)
+              Text("Género: $gender", style: const TextStyle(fontSize: 20)),
+          ],
+        ),
       ),
     );
   }
@@ -160,13 +170,19 @@ class _AgePredictorState extends State<AgePredictor> {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        TextField(controller: controller, decoration: const InputDecoration(labelText: 'Nombre')),
-        ElevatedButton(onPressed: predictAge, child: const Text("Determinar Edad")),
+        TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Nombre'),
+        ),
+        ElevatedButton(
+          onPressed: predictAge,
+          child: const Text("Determinar Edad"),
+        ),
         if (age > 0) ...[
           Text("Edad: $age", style: const TextStyle(fontSize: 20)),
           Text("Categoría: $category", style: const TextStyle(fontSize: 18)),
-          Image.network(img, height: 100),
-        ]
+          Image.asset(img, height: 100),
+        ],
       ],
     );
   }
@@ -184,7 +200,9 @@ class _UniversityFinderState extends State<UniversityFinder> {
 
   void fetchUniversities() async {
     final country = controller.text.trim().replaceAll(' ', '+');
-    final url = Uri.parse("http://universities.hipolabs.com/search?country=$country");
+    final url = Uri.parse(
+      "http://universities.hipolabs.com/search?country=$country",
+    );
     final res = await http.get(url);
     final data = jsonDecode(res.body);
     setState(() {
@@ -194,22 +212,54 @@ class _UniversityFinderState extends State<UniversityFinder> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(padding: const EdgeInsets.all(12), children: [
-      TextField(controller: controller, decoration: const InputDecoration(labelText: 'Nombre del país en inglés')),
-      ElevatedButton(onPressed: fetchUniversities, child: const Text("Buscar Universidades")),
-      for (var u in universities.take(10))
-        ListTile(
-          title: Text(u['name']),
-          subtitle: Text("Dominio: ${u['domains'][0]}"),
-          trailing: IconButton(
-            icon: const Icon(Icons.open_in_browser),
-            onPressed: () async {
-              final url = Uri.parse(u['web_pages'][0]);
-              if (await canLaunchUrl(url)) await launchUrl(url);
-            },
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Nombre del país en inglés',
           ),
-        )
-    ]);
+        ),
+        ElevatedButton(
+          onPressed: fetchUniversities,
+          child: const Text("Buscar Universidades"),
+        ),
+        const SizedBox(height: 10),
+        for (var u in universities.take(10))
+          GestureDetector(
+            onTap: () async {
+              String originalUrl = u['web_pages'][0];
+              if (originalUrl.startsWith('http://')) {
+                originalUrl = originalUrl.replaceFirst('http://', 'https://');
+              }
+
+              final url = Uri.parse(originalUrl);
+
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No se pudo abrir el enlace')),
+                );
+              }
+            },
+            child: Card(
+              child: ListTile(
+                title: Text(u['name']),
+                subtitle: Text(
+                  u['web_pages'][0],
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                trailing: const Icon(Icons.open_in_browser),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -231,9 +281,11 @@ class _WeatherRDState extends State<WeatherRD> {
 
   Future<void> fetchWeather() async {
     const apiKey = 'b7edef53e3bc97a50876f467e20f3cc1';
-    final res = await http.get(Uri.parse(
-      "https://api.openweathermap.org/data/2.5/weather?q=Santo%20Domingo,DO&appid=$apiKey&units=metric",
-    ));
+    final res = await http.get(
+      Uri.parse(
+        "https://api.openweathermap.org/data/2.5/weather?q=Santo%20Domingo,DO&appid=$apiKey&units=metric",
+      ),
+    );
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
@@ -242,13 +294,14 @@ class _WeatherRDState extends State<WeatherRD> {
       icon = condition.contains("cloud")
           ? Icons.cloud
           : condition.contains("rain")
-              ? Icons.beach_access
-              : condition.contains("clear")
-                  ? Icons.wb_sunny
-                  : Icons.wb_cloudy;
+          ? Icons.beach_access
+          : condition.contains("clear")
+          ? Icons.wb_sunny
+          : Icons.wb_cloudy;
 
       setState(() {
-        weather = "Clima en Santo Domingo: ${data['weather'][0]['description']}, ${temp.toStringAsFixed(1)}°C";
+        weather =
+            "Clima en Santo Domingo: ${data['weather'][0]['description']}, ${temp.toStringAsFixed(1)}°C";
       });
     } else {
       setState(() => weather = "Error al obtener clima");
@@ -258,10 +311,13 @@ class _WeatherRDState extends State<WeatherRD> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 100, color: Colors.orange),
-        Text(weather, style: const TextStyle(fontSize: 20)),
-      ]),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 100, color: const Color.fromARGB(255, 93, 41, 160)),
+          Text(weather, style: const TextStyle(fontSize: 20)),
+        ],
+      ),
     );
   }
 }
@@ -283,15 +339,20 @@ class _PokemonInfoState extends State<PokemonInfo> {
 
   void fetchPokemon() async {
     final poke = controller.text.trim().toLowerCase();
-    final res = await http.get(Uri.parse("https://pokeapi.co/api/v2/pokemon/$poke"));
+    final res = await http.get(
+      Uri.parse("https://pokeapi.co/api/v2/pokemon/$poke"),
+    );
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       setState(() {
         name = data['name'];
         img = data['sprites']['front_default'];
         exp = data['base_experience'];
-        abilities = (data['abilities'] as List).map((a) => a['ability']['name'].toString()).toList();
-        soundUrl = "https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${data['id']}.ogg";
+        abilities = (data['abilities'] as List)
+            .map((a) => a['ability']['name'].toString())
+            .toList();
+        soundUrl =
+            "https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${data['id']}.ogg";
       });
       player.play(UrlSource(soundUrl));
     }
@@ -299,16 +360,25 @@ class _PokemonInfoState extends State<PokemonInfo> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(padding: const EdgeInsets.all(12), children: [
-      TextField(controller: controller, decoration: const InputDecoration(labelText: 'Nombre del Pokémon')),
-      ElevatedButton(onPressed: fetchPokemon, child: const Text("Buscar Pokémon")),
-      if (name.isNotEmpty) ...[
-        Image.network(img),
-        Text("Nombre: $name", style: const TextStyle(fontSize: 20)),
-        Text("Experiencia Base: $exp"),
-        Text("Habilidades: ${abilities.join(', ')}"),
-      ]
-    ]);
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Nombre del Pokémon'),
+        ),
+        ElevatedButton(
+          onPressed: fetchPokemon,
+          child: const Text("Buscar Pokémon"),
+        ),
+        if (name.isNotEmpty) ...[
+          Image.network(img),
+          Text("Nombre: $name", style: const TextStyle(fontSize: 20)),
+          Text("Experiencia Base: $exp"),
+          Text("Habilidades: ${abilities.join(', ')}"),
+        ],
+      ],
+    );
   }
 }
 
@@ -367,17 +437,21 @@ class _WordPressNewsState extends State<WordPressNews> {
       children: [
         Image.asset("assets/WP-Mayor_Social.webp", height: 100),
         const SizedBox(height: 30),
-        ...posts.map((p) => ListTile(
-              title: Text(p['title']['rendered'] ?? "Sin título"),
-              subtitle: Text(removeHtmlTags(p['excerpt']['rendered'] ?? "Sin descripción")),
-              trailing: IconButton(
-                icon: const Icon(Icons.open_in_browser),
-                onPressed: () async {
-                  final url = Uri.parse(p['link']);
-                  if (await canLaunchUrl(url)) await launchUrl(url);
-                },
-              ),
-            )),
+        ...posts.map(
+          (p) => ListTile(
+            title: Text(p['title']['rendered'] ?? "Sin título"),
+            subtitle: Text(
+              removeHtmlTags(p['excerpt']['rendered'] ?? "Sin descripción"),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.open_in_browser),
+              onPressed: () async {
+                final url = Uri.parse(p['link']);
+                if (await canLaunchUrl(url)) await launchUrl(url);
+              },
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -388,13 +462,19 @@ class AboutMe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [
-        CircleAvatar(radius: 60, backgroundImage: AssetImage("assets/yo.jpeg")),
-        SizedBox(height: 10),
-        Text("Nombre: Albert De los Santos", style: TextStyle(fontSize: 20)),
-        Text("Email: 20230553@itla.edu.do"),
-        Text("Tel: +1 809 000 0000"),
-      ]),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          CircleAvatar(
+            radius: 60,
+            backgroundImage: AssetImage("assets/yo.jpeg"),
+          ),
+          SizedBox(height: 10),
+          Text("Nombre: Albert De los Santos", style: TextStyle(fontSize: 20)),
+          Text("Email: 20230553@itla.edu.do"),
+          Text("Tel: +1 809 000 0000"),
+        ],
+      ),
     );
   }
 }
